@@ -13,8 +13,9 @@ namespace SignalRChatWithDiffClient.Hubs
         {
             var httpCtx = Context.GetHttpContext();
             var headers = httpCtx.Request.Headers;
+            string userNameFromQuery = httpCtx.Request.Query["username"];
             string userNameFromHeaders = headers["username"];
-            message.Caller = userNameFromHeaders;
+            message.Caller = (!string.IsNullOrEmpty(userNameFromHeaders)) ? userNameFromHeaders : ((!string.IsNullOrEmpty(userNameFromQuery)) ? userNameFromQuery : "Anonymous");
             message.CreatedAt = DateTime.Now;
             return Clients.Others.SendClientMessageToChat(message);
         }
@@ -23,10 +24,12 @@ namespace SignalRChatWithDiffClient.Hubs
         {
             var httpCtx = Context.GetHttpContext();
             var headers = httpCtx.Request.Headers;
+            string userNameFromQuery = httpCtx.Request.Query["username"];
             string userNameFromHeaders = headers["username"];
+
             ChatMessage message = new ChatMessage
             {
-                Caller = (userNameFromHeaders != null) ? userNameFromHeaders : Context.ConnectionId,
+                Caller = (!string.IsNullOrEmpty(userNameFromHeaders)) ? userNameFromHeaders : ((!string.IsNullOrEmpty(userNameFromQuery)) ? userNameFromQuery : "Anonymous"),//Context.ConnectionId,
                 Text = "joined chat"
             };
             await AddMessageToChat(message);

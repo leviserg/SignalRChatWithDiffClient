@@ -6,6 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 builder.Services.AddSignalR();
+builder.Services.AddCors();
 builder.Services.AddResponseCompression(
     options => options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[] { "application/octet-stream" })
     );
@@ -17,7 +18,7 @@ app.UseResponseCompression();
 app.UseHttpsRedirection();
 
 app.UseRouting();
-/*
+
 app.UseCors(policy =>
 {
     policy
@@ -26,7 +27,7 @@ app.UseCors(policy =>
         .AllowAnyMethod()
         .AllowCredentials();
 });
-*/
+
 app.MapHub<ChatHub>("/chat");
 
 app.Run();

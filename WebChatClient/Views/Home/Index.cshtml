@@ -1,0 +1,140 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+@*<div class="text-center">
+    <h1 class="display-4">Welcome</h1>
+    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+</div>*@
+
+<div class="container container-fluid">
+    <div class="row py-2 my-2">
+        <div class="col-md-6">
+            State :<span id="conState" class="mx-2">Disconnected</span>
+        </div>
+        <div class="col-md-6">
+            <div class="input-group">
+                <input id="name" class="form-control" placeholder="Anonymous" type="text"/>
+                <button class="btn btn-primary form-control-append" style="width:180px" id="connectButton" onclick="connect()">Connect</button>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+@*            <div style="width:100%; height:200px" id="messages-content"></div>*@
+            <textarea style="width:100%; height:500px" id="messages-content"></textarea>
+        </div>
+    </div>
+    <div class="row py-3 my-3">
+        <div class="col-md-12">
+            <div class="input-group">
+                <input id="message" class="form-control" type="text"/>
+                <button class="btn btn-primary form-control-append" style="width:180px" onclick="sendMessage()" >Send</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts
+{
+    <script type="text/javascript" src="~/js/signalr.min.js"></script>
+    <script type="text/javascript">
+
+        function scrollToBottom(elem) {
+            elem.scrollTop = elem.scrollHeight;
+        }
+
+        document.querySelector('#name').value = "";
+
+        let userName = prompt("Please enter your name:", "Harry Potter");
+        
+        $(document).ready(function(){
+            $("#name").val(userName);
+        });
+
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("https://localhost:7065/chat/?username=" + userName) 
+            //,{
+            //    headers: { "username" : userName },
+            //    transport: signalR.HttpTransportType.LongPolling 
+            //})
+            .withAutomaticReconnect()
+            .build();
+
+        connection.on('SendClientMessageToChat', (message) => {
+            appendMessage(response_time_format(message.createdAt) + " : " + message.caller, message.text, 'black');
+        });
+
+        connection.onclose(error => {
+            console.log('Connection closed. ', error)
+        });
+
+        connection.onreconnecting(error => {
+            console.log('Connection reconnecting. ', error);
+        });
+
+        connection.onreconnected(connectionId => {
+            console.log('Connectin reconnected with id: ', connectionId);
+        });
+
+        function appendMessage(sender, message, color) {
+            //document.querySelector('#messages-content').insertAdjacentHTML("beforeend", `<div style="color:${color}" class="py-0,my-0">${sender} : ${message}<br></div><br>`);
+            document.querySelector('#messages-content').value += sender + ' : ' + message + '\n';
+            scrollToBottom(document.querySelector('#messages-content'));
+        }
+
+        async function connect() {
+            if (connection.state === 'Disconnected') {
+                try {
+                    await connection.start();
+                }
+                catch (error) {
+                    console.log(error);
+                }
+                if (connection.state === 'Connected') {
+                    document.querySelector('#conState').textContent = 'Connected';
+                    document.querySelector('#conState').style.color = 'green';
+                    document.querySelector('#connectButton').textContent = 'Disconnect';
+                }
+            } else if (connection.state === 'Connected') {
+                await connection.stop();
+                document.querySelector('#conState').textContent = 'Disconnected';
+                document.querySelector('#conState').style.color = 'red';
+                document.querySelector('#connectButton').textContent = 'Connect';
+            }
+        };
+
+        async function sendMessage() {
+            console.log(connection);
+            if (connection.state === 'Connected') {
+                let textArea = document.querySelector('#message');
+                let message = { text: textArea.value };
+                try {
+                    await connection.send('AddMessageToChat', message);
+                    let d = new Date();
+                    appendMessage(time_format(d) + ' : Me', message.text, 'green');
+                }
+                catch (error) {
+                    console.log(error);
+                }
+                document.querySelector('#message').value = '';
+            }
+        }
+
+        function time_format(d) {
+            hours = format_two_digits(d.getHours());
+            minutes = format_two_digits(d.getMinutes());
+            seconds = format_two_digits(d.getSeconds());
+            return hours + ":" + minutes + ":" + seconds;
+        }
+
+        function format_two_digits(n) {
+            return n < 10 ? '0' + n : n;
+        }
+
+        function response_time_format(d) {
+            return d.substr(d.indexOf("T")+1, 8); //.inhours + ":" + minutes + ":" + seconds;
+        }
+
+    </script>
+}
