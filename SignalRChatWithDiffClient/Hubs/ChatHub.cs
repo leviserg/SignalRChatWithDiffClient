@@ -7,42 +7,34 @@ namespace SignalRChatWithDiffClient.Hubs
 {
     public class ChatHub : Hub<IChatClient>, IChatServer
     {
-        private const string userNameKey = "username";
 
-        public Task AddMessageToChat(ChatMessage message)
+        private readonly string subscribersGroupName = "Subscribers";
+        public Task AddMessageToChat(string message)
         {
-            var httpCtx = Context.GetHttpContext();
-            var headers = httpCtx.Request.Headers;
-            string userNameFromQuery = httpCtx.Request.Query["username"];
-            string userNameFromHeaders = headers["username"];
-            message.Caller = (!string.IsNullOrEmpty(userNameFromHeaders)) ? userNameFromHeaders : ((!string.IsNullOrEmpty(userNameFromQuery)) ? userNameFromQuery : "Anonymous");
-            message.CreatedAt = DateTime.Now;
-            return Clients.Others.SendClientMessageToChat(message);
+            var caller = Context.UserIdentifier; // implemented in CustomUserProvider : IUserIdProvider
+            var messageForClient = ChatMessage.Create(caller, message);
+            return Clients.Others.SendClientMessageToChat(messageForClient);
         }
 
         public override async Task OnConnectedAsync()
         {
-            var httpCtx = Context.GetHttpContext();
-            var headers = httpCtx.Request.Headers;
-            string userNameFromQuery = httpCtx.Request.Query["username"];
-            string userNameFromHeaders = headers["username"];
-
-            ChatMessage message = new ChatMessage
-            {
-                Caller = (!string.IsNullOrEmpty(userNameFromHeaders)) ? userNameFromHeaders : ((!string.IsNullOrEmpty(userNameFromQuery)) ? userNameFromQuery : "Anonymous"),//Context.ConnectionId,
-                Text = "joined chat"
-            };
-            await AddMessageToChat(message);
+            await AddMessageToChat("joined chat");
             await base.OnConnectedAsync();
         }
 
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
-            ChatMessage message = new ChatMessage
-            {
-                Text = "left chat"
-            };
-            await AddMessageToChat(message);
+            await AddMessageToChat("left chat");
+        }
+
+        public Task Subscribe()
+        {
+            return Groups.AddToGroupAsync(Context.ConnectionId, subscribersGroupName);
+        }
+
+        public Task Unsubscribe()
+        {
+            return Groups.RemoveFromGroupAsync(Context.ConnectionId, subscribersGroupName);
         }
     }
 }

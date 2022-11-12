@@ -11,5 +11,19 @@ namespace Common.Models
         public string? Caller { get; set; }
         public string? Text { get; set; }
         public DateTime CreatedAt { get; set; }
+
+        public ChatMessage()
+        {
+
+        }
+        public static ChatMessage Create(string? caller, string text)
+        {
+            return new ChatMessage
+            {
+                Caller = string.IsNullOrWhiteSpace(caller) ? "Anonymous" : caller,
+                Text = text,
+                CreatedAt = DateTime.Now
+            };
+        }
     }
 }

@@ -15,7 +15,8 @@
         <div class="col-md-6">
             <div class="input-group">
                 <input id="name" class="form-control" placeholder="Anonymous" type="text"/>
-                <button class="btn btn-primary form-control-append" style="width:180px" id="connectButton" onclick="connect()">Connect</button>
+                <button class="btn btn-primary form-control-append mr-2" style="width:180px" id="connectButton" onclick="connect()">Connect</button>
+                <button class="btn btn-light mr-2" style="width:180px" id="subscribeButton" onclick="subscribe()">Subscribe</button>
             </div>
         </div>
     </div>
@@ -43,6 +44,8 @@
         function scrollToBottom(elem) {
             elem.scrollTop = elem.scrollHeight;
         }
+
+        let subscribed = false;
 
         document.querySelector('#name').value = "";
 
@@ -105,19 +108,46 @@
         };
 
         async function sendMessage() {
-            console.log(connection);
             if (connection.state === 'Connected') {
                 let textArea = document.querySelector('#message');
-                let message = { text: textArea.value };
+                let message = textArea.value;
                 try {
                     await connection.send('AddMessageToChat', message);
                     let d = new Date();
-                    appendMessage(time_format(d) + ' : Me', message.text, 'green');
+                    appendMessage(time_format(d) + ' : Me', message, 'green');
                 }
                 catch (error) {
                     console.log(error);
                 }
                 document.querySelector('#message').value = '';
+            }
+        }
+
+        async function subscribe() {
+            if (connection.state === 'Connected') {
+                if (subscribed == true) {
+                    try
+                    {
+                        await connection.invoke("Unsubscribe");
+                        subscribed = false;
+                        document.querySelector('#subscribeButton').textContent = 'Subscribe';
+                    }
+                    catch (error) {
+                        console.log(error);
+                    }
+                }
+                else
+                {
+                    try
+                    {
+                        await connection.invoke("Subscribe");
+                        subscribed = true;
+                        document.querySelector('#subscribeButton').textContent = 'Unsubscribe';
+                    }
+                    catch (error) {
+                        console.log(error);
+                    }
+                }
             }
         }
 

@@ -19,9 +19,15 @@ namespace WpfChatClient
         string messageHandle = nameof(IChatClient.SendClientMessageToChat);
         string addMessageKey = nameof(IChatServer.AddMessageToChat);
 
+        string subscribeKey = nameof(IChatServer.Subscribe);
+        string unsubscribeKey = nameof(IChatServer.Unsubscribe);
+
+
         string userName = String.Empty;
 
         HubConnection hubConnection;
+
+        private bool subscribed;
 
         public MainWindow()
         {
@@ -101,16 +107,14 @@ namespace WpfChatClient
         {
             if (hubConnection.State == HubConnectionState.Connected)
             {
-                var message = new ChatMessage
-                {
-                    Text = messageTxtBox.Text
-                };
+
+                string message = messageTxtBox.Text;
 
                 try
                 {
                     //var mymessage = await hubConnection.InvokeAsync<ChatMessage>(addMessageKey, message);
                     await hubConnection.SendAsync(addMessageKey, message);
-                    AppendTextToTextBox($"{DateTime.Now.ToString("HH:mm:ss")} :  Me", message.Text, Brushes.Green);
+                    AppendTextToTextBox($"{DateTime.Now.ToString("HH:mm:ss")} :  Me", message, Brushes.Green);
                 }
                 catch (Exception ex)
                 {
@@ -119,6 +123,36 @@ namespace WpfChatClient
                 finally
                 {
                     messageTxtBox.Clear();
+                }
+            }
+        }
+
+        private async void subscribeBtn_Click(object sender, RoutedEventArgs e)
+        {
+            if (subscribed)
+            {
+                try
+                {
+                    await hubConnection.InvokeAsync(unsubscribeKey);
+                    subscribed = false;
+                    subscribeBtn.Content = "Subscribe";
+                }
+                catch (Exception ex)
+                {
+                    ShowError(ex);
+                }
+            }
+            else
+            {
+                try
+                {
+                    await hubConnection.InvokeAsync(subscribeKey);
+                    subscribed = true;
+                    subscribeBtn.Content = "Unsubscribe";
+                }
+                catch (Exception ex)
+                {
+                    ShowError(ex);
                 }
             }
         }
@@ -139,6 +173,11 @@ namespace WpfChatClient
             {
                 chatTextBox.ScrollToEnd();
             }
+        }
+
+        private void ShowError(Exception ex)
+        {
+            MessageBox.Show(ex?.Message ?? "Error");
         }
 
         private async void Shutdown(object sender, EventArgs e)
