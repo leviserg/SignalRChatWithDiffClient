@@ -2,6 +2,7 @@
 using Common.Models;
 using Microsoft.AspNetCore.Http.Connections.Client;
 using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Threading.Tasks;
 using System.Windows;
@@ -45,7 +46,13 @@ namespace WpfChatClient
                 WithUrl("https://localhost:7065/chat",
                 (HttpConnectionOptions options) => options.Headers.Add("username", userName))
                     .WithAutomaticReconnect()
+                    //.AddMessagePackProtocol() // added for using MessagePack protocol + using Microsoft.Extensions.DependencyInjection;
                     .Build();
+
+            // install NuGet package Microsoft AspNetCore SignalR Protocols MessagePack for using MessagePack protocol
+            // profit - compact message (in comparison with uncompressed json - default) + quicker serialize/deserialize process - limits on data types + item counts
+
+
 
             hubConnection.On<ChatMessage>(messageHandle, message =>
                  AppendTextToTextBox($"{message.CreatedAt.ToString("HH:mm:ss")} : {message.Caller}", message.Text, Brushes.Black));
