@@ -3,7 +3,7 @@ using Common.Models;
 using Microsoft.AspNetCore.SignalR;
 using System.Diagnostics;
 
-namespace SignalRChatWithDiffClient.Hubs
+namespace Server.Hubs
 {
     public class ChatHub : Hub<IChatClient>, IChatServer
     {
@@ -13,6 +13,7 @@ namespace SignalRChatWithDiffClient.Hubs
         {
             var caller = Context.UserIdentifier; // implemented in CustomUserProvider : IUserIdProvider
             var messageForClient = ChatMessage.Create(caller, message);
+            Console.WriteLine(message);
             return Clients.Others.SendClientMessageToChat(messageForClient);
         }
 

@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 
-namespace SignalRChatWithDiffClient.Providers
+namespace Server.Providers
 {
     public class CustomUserProvider : IUserIdProvider
     {

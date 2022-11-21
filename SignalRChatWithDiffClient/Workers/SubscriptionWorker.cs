@@ -1,10 +1,10 @@
 ﻿using Common.Interfaces;
 using Common.Models;
 using Microsoft.AspNetCore.SignalR;
-using SignalRChatWithDiffClient.Hubs;
+using Server.Hubs;
 using System.Diagnostics;
 
-namespace SignalRChatWithDiffClient.Workers
+namespace Server.Workers
 {
     public class SubscriptionWorker : BackgroundService
     {

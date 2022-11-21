@@ -46,7 +46,7 @@ namespace WpfChatClient
                 WithUrl("https://localhost:7065/chat",
                 (HttpConnectionOptions options) => options.Headers.Add("username", userName))
                     .WithAutomaticReconnect()
-                    //.AddMessagePackProtocol() // added for using MessagePack protocol + using Microsoft.Extensions.DependencyInjection;
+                    .AddMessagePackProtocol() // added for using MessagePack protocol + using Microsoft.Extensions.DependencyInjection;
                     .Build();
 
             // install NuGet package Microsoft AspNetCore SignalR Protocols MessagePack for using MessagePack protocol

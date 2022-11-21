@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.SignalR;
-using SignalRChatWithDiffClient.Hubs;
-using SignalRChatWithDiffClient.Providers;
-using SignalRChatWithDiffClient.Workers;
+using Server.Hubs;
+using Server.Providers;
+using Server.Workers;
 
 var builder = WebApplication.CreateBuilder(args);
 
