@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Http.Connections.Client;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Documents;
@@ -22,7 +24,8 @@ namespace WpfChatClient
 
         string subscribeKey = nameof(IChatServer.Subscribe);
         string unsubscribeKey = nameof(IChatServer.Unsubscribe);
-
+        string downloadStreamKey = nameof(IChatServer.DownloadStream);
+        string uploadStreamKey = nameof(IChatServer.UploadStream);
 
         string userName = String.Empty;
 
@@ -164,16 +167,31 @@ namespace WpfChatClient
             }
         }
 
+        private async void readStreamFromServerBtn_Click(object sender, RoutedEventArgs e)
+        {
+            var stream = hubConnection.StreamAsync<string>(downloadStreamKey);
+
+            await foreach (string element in stream)
+            {
+                AppendTextToTextBox("Server stream", element, Brushes.Blue);
+            }
+
+            AppendTextToTextBox("Server stream", "Stream completed", Brushes.Blue);
+        }
+
+        private async void sendStreamToServerBtn_Click(object sender, RoutedEventArgs e)
+        {
+            var testAsyncEnumerable = TestAsyncEnumerable();
+            await hubConnection.SendAsync(uploadStreamKey, testAsyncEnumerable);
+        }
+
         public void AppendTextToTextBox(string sender, string text, Brush brush)
         {
-            //BrushConverter bc = new BrushConverter();
             TextRange tr = new TextRange(chatTextBox.Document.ContentEnd, chatTextBox.Document.ContentEnd);
             tr.Text = string.Format("{0} : {1}{2}", sender, text, Environment.NewLine);
             try
             {
-                tr.ApplyPropertyValue(TextElement.ForegroundProperty,
-                    brush);
-                    //bc.ConvertFromString(color));
+                tr.ApplyPropertyValue(TextElement.ForegroundProperty, brush);
             }
             catch (FormatException) { }
             finally
@@ -198,6 +216,16 @@ namespace WpfChatClient
                 await this.hubConnection.DisposeAsync();
             }
         }
+
+        async IAsyncEnumerable<string> TestAsyncEnumerable()
+        {
+            for (int i = 9; i >= 0; i--)
+            {
+                yield return $"Client {userNameTxtBox.Text} talks : {i.ToString().PadLeft(2, '0')} : {DateTime.Now.ToString("HH:mm:ss")}";
+                await Task.Delay(1000);
+            }
+        }
+
 
     }
 

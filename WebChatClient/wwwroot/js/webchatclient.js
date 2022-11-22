@@ -104,6 +104,31 @@ async function subscribe() {
     }
 }
 
+function fromServerStream() {
+    let stream = connection.stream("DownloadStream")
+        .subscribe({
+            next: (item) => { appendMessageToTextArea('Server stream', item, 'green'); /*console.log(item);*/ },
+            complete: () => { appendMessageToTextArea('Server stream', 'Stream completed', 'green'); /*console.log('Stream from server completed');*/ },
+            error: (err) => { console.log('Stream error'); }
+        });
+}
+
+async function toServerStream() {
+    const subject = new signalR.Subject();
+    connection.send("UploadStream", subject);
+    for (let i = 0; i < 10; i++) {
+        let curTime = new Date();
+        let streamPart = 'Client ' + $("#name").val() + ' talks: ' + ('0' + i).substr(0,2) + ' : ' + time_format(curTime);
+        subject.next(streamPart);
+        await sleep(1000);
+    }
+    subject.complete();
+}
+
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 function time_format(d) {
     hours = format_two_digits(d.getHours());
     minutes = format_two_digits(d.getMinutes());

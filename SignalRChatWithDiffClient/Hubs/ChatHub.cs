@@ -2,6 +2,7 @@
 using Common.Models;
 using Microsoft.AspNetCore.SignalR;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 namespace Server.Hubs
 {
@@ -16,6 +17,36 @@ namespace Server.Hubs
             Console.WriteLine(message);
             return Clients.Others.SendClientMessageToChat(messageForClient);
         }
+
+        // Streaming - server -> clients
+        public async IAsyncEnumerable<string> DownloadStream([EnumeratorCancellation] CancellationToken cancellationToken)
+        {
+            int iteration = 0;
+            while (iteration < 10 && !cancellationToken.IsCancellationRequested)
+            {
+                yield return $"Server talks : {iteration.ToString().PadLeft(2,'0')} : {DateTime.Now.ToString("HH:mm:ss")}";
+
+                iteration += 1;
+
+                await Task.Delay(1000, cancellationToken);
+            }
+        }
+
+
+        // Streaming - clients -> server
+        public async Task UploadStream(IAsyncEnumerable<string> asyncEnumerable)
+        {
+            await foreach (string element in asyncEnumerable)
+            {
+                Debug.WriteLine(element);
+            }
+
+            Debug.WriteLine("Stream from client completed");
+        }
+
+
+
+
 
         public override async Task OnConnectedAsync()
         {
